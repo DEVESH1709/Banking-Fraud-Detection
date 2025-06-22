@@ -60,6 +60,7 @@ const ForgotPasswordPage = () => {
               )}
             </motion.button>
           </form>
+          
         ) : (
           <div className="text-center">
             <motion.div
