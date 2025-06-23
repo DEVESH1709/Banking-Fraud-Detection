@@ -4,15 +4,17 @@ import crypto from "crypto";
 import { User } from "../models/user.model.js";
 import { generateVerificationCode } from "../utils/generateVerificationCode.js";
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
+import { evaluateContext } from "../utils/contextEvaluator.js";
 import {
   sendVerificationEmail,
   sendWelcomeEmail,
   sendResetPasswordEmail,
   sendResetSuccessEmail,
 } from "../nodemailer/emails.js";
+import { updateContextProfile } from "../utils/updateContextProfile.js";
 
 export const signup = async (req, res) => {
-  const { email, password, name } = req.body;
+  const { email, password, name, context } = req.body;
   try {
     if (!email || !password || !name) {
       throw new Error("All fields are required!");
@@ -35,10 +37,35 @@ export const signup = async (req, res) => {
       name,
       verificationToken,
       verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+      trustedIPs: [context.ip], // Initialize with the current IP
+      trustedDevices: [context.device], // Initialize with the current device
+      locations: [
+        {
+          lat: context.location.latitude,
+          lon: context.location.longitude,
+        },
+      ], // Initialize with the current location
+      contextLogs: [
+        {
+          ip: context.ip,
+          device: context.device,
+          location: {
+            lat: context.location.latitude,
+            lon: context.location.longitude,
+          },
+          timestamp: new Date(),
+          riskScore: 0, // Initial risk score for this context
+        },
+      ],
+      behavioralProfile: {
+        typingSpeed: context.typingSpeed,
+        loginHours: context.loginHours,
+      }, // Initialize with the current behavioral profile
+      riskScore: 0, // Initialize risk score
     });
 
     await user.save();
-
+    
     // jwt
     generateTokenAndSetCookie(res, user._id);
 
@@ -171,7 +198,7 @@ export const resetPassword = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, context } = req.body;
   try {
     if (!email || !password) {
       throw new Error("All fields are required!");
@@ -191,8 +218,25 @@ export const login = async (req, res) => {
         .json({ success: false, message: "Wrong Password!" });
     }
 
-    user.lastLogin = new Date();
-    await user.save();
+    try {
+      const risk = evaluateContext(context, user);
+      // if (risk >= 5) {
+      //   return res
+      //     .status(403)
+      //     .json({ error: "Suspicious activity, login blocked" });
+      // } else if (risk >= 4) {
+      //   return res
+      //     .status(200)
+      //     .json({ message: "2FA required", require2FA: true });
+      // }
+      // const risk = 0;
+      user.lastLogin = new Date();
+      await updateContextProfile(user, context, risk);
+      await user.save();
+    } catch (error) {
+      console.error("Error evaluating context:", error);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
 
     generateTokenAndSetCookie(res, user._id);
 
@@ -202,6 +246,12 @@ export const login = async (req, res) => {
       user: {
         ...user._doc,
         password: undefined,
+        contextLogs: undefined,
+        trustedIPs: undefined,
+        trustedDevices: undefined,
+        locations: undefined,
+        behavioralProfile: undefined,
+        riskScore: undefined,
       },
     });
   } catch (error) {
@@ -219,7 +269,9 @@ export const checkAuth = async (req, res) => {
   try {
     const user = await User.findById(req.userId).select("-password");
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
     res.status(200).json({ success: true, user });
   } catch (error) {

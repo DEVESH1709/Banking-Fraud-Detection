@@ -4,8 +4,10 @@ import { Input, PasswordStrengthMeter } from "../components";
 import { Loader, Lock, Mail, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
+import useContextData from "../hooks/UseContextData";
 
 const SignUpPage = () => {
+  const { context, handleKeyDown } = useContextData();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,7 +19,7 @@ const SignUpPage = () => {
     e.preventDefault();
 
     try {
-      await signup(name, email, password);
+      await signup(name, email, password, context);
       navigate("/verify-email");
     } catch (error) {
       console.error("Sign Up failed:", error);
@@ -48,6 +50,7 @@ const SignUpPage = () => {
             type="text"
             placeholder="Full Name"
             value={name}
+            onKeyDown={handleKeyDown}
             onChange={(e) => {
               setName(e.target.value);
             }}
@@ -57,6 +60,7 @@ const SignUpPage = () => {
             type="email"
             placeholder="Email Address"
             value={email}
+            onKeyDown={handleKeyDown}
             onChange={(e) => {
               setEmail(e.target.value);
             }}
@@ -66,6 +70,7 @@ const SignUpPage = () => {
             type="password"
             placeholder="Password"
             value={password}
+            onKeyDown={handleKeyDown}
             onChange={(e) => {
               setPassword(e.target.value);
             }}

@@ -5,8 +5,10 @@ import { Lock, Mail, Loader } from "lucide-react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../store/authStore";
+import useContextData from "../hooks/UseContextData";
 
 const LoginPage = () => {
+  const { context, handleKeyDown } = useContextData();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -15,7 +17,7 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      await login(email, password);
+      await login(email, password, context);
       toast.success("Logged in successfully!");
     } catch (error) {
       console.error("Login failed:", error);
@@ -39,6 +41,7 @@ const LoginPage = () => {
             type="email"
             placeholder="Email Address"
             value={email}
+            onKeyDown={handleKeyDown}
             onChange={(e) => setEmail(e.target.value)}
           />
           <Input
@@ -46,6 +49,7 @@ const LoginPage = () => {
             type="password"
             placeholder="Password"
             value={password}
+            onKeyDown={handleKeyDown}
             onChange={(e) => setPassword(e.target.value)}
           />
           {error && <p className="text-red-500 font-semibold mb-2">{error}</p>}

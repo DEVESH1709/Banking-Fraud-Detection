@@ -13,13 +13,14 @@ export const useAuthStore = create((set) => ({
   isCheckingAuth: true,
   message: null,
 
-  signup: async (name, email, password) => {
+  signup: async (name, email, password, context) => {
     set({ isLoading: true, error: null });
     try {
       const response = await axios.post(`${API_URL}/signup`, {
         name,
         email,
         password,
+        context, // Pass the context
       });
       set({
         user: response.data.user,
@@ -96,12 +97,13 @@ export const useAuthStore = create((set) => ({
     }
   },
 
-  login: async (email, password) => {
+  login: async (email, password, context) => {
     set({ isLoading: true, error: null });
     try {
       const response = await axios.post(`${API_URL}/login`, {
         email,
         password,
+        context, // Pass the context
       });
       set({
         user: response.data.user,
