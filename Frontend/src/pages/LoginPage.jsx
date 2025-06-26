@@ -2,23 +2,23 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Input } from "../components";
 import { Lock, Mail, Loader } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../store/authStore";
-import useContextData from "../hooks/UseContextData";
 
 const LoginPage = () => {
   const { context, handleKeyDown } = useContextData();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
+  const Navigate = useNavigate();
   const { login, error, isLoading } = useAuthStore();
-
+  
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       await login(email, password, context);
       toast.success("Logged in successfully!");
+      Navigate("/transaction");
     } catch (error) {
       console.error("Login failed:", error);
     }

@@ -105,6 +105,15 @@ function App() {
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
+
+    
+   <Route
+  path="/transactions"
+  element={
+    isAuthenticated ? <TransactionPage /> : <Navigate to="/login" />
+  }
+   />
+
       </Routes>
 
       <Toaster />
