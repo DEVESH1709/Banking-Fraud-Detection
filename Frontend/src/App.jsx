@@ -17,6 +17,7 @@ import {
   ForgotPasswordPage,
   ResetPasswordPage,
 } from "./pages";
+import TransactionPage from "./pages/Transaction";
 
 function App() {
   const { isCheckingAuth, checkAuth } = useAuthStore();
@@ -107,12 +108,15 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
 
     
-   <Route
+  <Route
   path="/transactions"
   element={
-    isAuthenticated ? <TransactionPage /> : <Navigate to="/login" />
+    <ProtectedRoute>
+      <TransactionPage />
+    </ProtectedRoute>
   }
-   />
+/>
+
 
       </Routes>
 

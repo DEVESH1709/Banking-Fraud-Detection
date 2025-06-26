@@ -1,6 +1,6 @@
-const Transaction = require('../models/transaction.model');
+import Transaction from '../models/transaction.model.js';
 
-const getUserTransactions = async (req, res) => {
+export const getUserTransactions = async (req, res) => {
   try {
     const transactions = await Transaction.find({ userId: req.user.id }).sort({ date: -1 });
     res.status(200).json(transactions);
@@ -9,4 +9,3 @@ const getUserTransactions = async (req, res) => {
   }
 };
 
-module.exports = { getUserTransactions };
